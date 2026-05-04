@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grafico modelo sequencial</title>
+  </head>
+  <body>
+    modelo y=(x^2)+(9-x)
+    <button onclick="prepararmodelo()" id="boton">Preparar modelo</button>
+  </body>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.0.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <canvas id="grafico"></canvas>
+  <script>
+    let model;
+
+    async function prepararmodelo() {
+      model = tf.sequential();
+      model.add(tf.layers.dense({ units: 1, inputShape: [1] }));
+
+      model.compile({ loss: "meanSquaredError", optimizer: "sgd" });
+
+      const xs = tf.tensor2d([-2, -1, 0, 1, 2, 3, 4], [7, 1]);
+      const ys = tf.tensor2d([7, 9, 9, 9, 11, 15, 21], [7, 1]);
+
+      const lossValue = [];
+
+      await model.fit(xs, ys, {
+        epochs: 50,
+        callbacks: {
+          onEpochEnd: (epochs, logs) => {
+            lossValue.push(logs.loss);
+          },
+        },
+      });
+      const ctx = document.getElementById("grafico");
+
+      const epochs = lossValue.map((_, i) => i + 1);
+      new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: epochs,
+          datasets: [
+            {
+              label: "Loss",
+              data: lossValue,
+            },
+          ],
+        },
+      });
+    }
+  </script>
+</html>
